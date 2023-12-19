@@ -71,6 +71,11 @@ function showMedicalTestDetail(patient, test) {
   const testDate = document.createElement("div");
   testDate.textContent = `Дата взятия образца: ${test.test_date}`;
   patientInfo.appendChild(testDate);
+  const labName = document.createElement("div");
+  labName.textContent = `Лаборатория: ${test.lab_name}`;
+  patientInfo.appendChild(labName);
+  const buttonDownload = createDownloadButton(test.id);
+  patientInfo.appendChild(buttonDownload);
   const table = document.createElement("table");
   const tableTitle = document.createElement("thead");
   const titleRow = document.createElement("tr");
@@ -80,9 +85,15 @@ function showMedicalTestDetail(patient, test) {
   researchValue.textContent = "Результат";
   const researchUnits = document.createElement("th");
   researchUnits.textContent = "Единицы";
+  const referenceValue = document.createElement("th");
+  referenceValue.textContent = "Референсные значения";
+  const comment = document.createElement("th");
+  comment.textContent = "Коммантарий";
   titleRow.appendChild(researchName);
   titleRow.appendChild(researchValue);
   titleRow.appendChild(researchUnits);
+  titleRow.appendChild(referenceValue);
+  titleRow.appendChild(comment);
   tableTitle.appendChild(titleRow);
   table.appendChild(tableTitle);
   const tbody = document.createElement("tbody");
@@ -94,12 +105,27 @@ function showMedicalTestDetail(patient, test) {
     rowItem2.textContent = `${value["result"]}`;
     let rowItem3 = document.createElement("td");
     rowItem3.textContent = `${value["units"]}`;
+    let rowItem4 = document.createElement("td");
+    rowItem4.textContent = `${value["reference_value"]}`;
+    let rowItem5 = document.createElement("td");
+    rowItem5.textContent = `${value["comment"]}`;
     tRow.appendChild(rowItem);
     tRow.appendChild(rowItem2);
     tRow.appendChild(rowItem3);
+    tRow.appendChild(rowItem4);
+    tRow.appendChild(rowItem5);
     tbody.appendChild(tRow);
   }
   table.appendChild(tbody);
   document.body.appendChild(patientInfo);
   document.body.appendChild(table);
+}
+
+function createDownloadButton(id) {
+  const link = document.createElement("a");
+  link.setAttribute("href", `/api/medical-test/download/${id}`);
+  const button = document.createElement("button");
+  button.textContent = "Скачать PDF";
+  link.appendChild(button);
+  return link;
 }

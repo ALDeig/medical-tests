@@ -26,6 +26,7 @@ async def save_analyse(pdf: Path, telegram_id: int) -> None:
         },
         test_date=analyse_data.patient_data.date,
         age=analyse_data.patient_data.age,
+        lab_name=analyse_data.lab_name,
         test_name=analyse_data.analyse_type,
         file_name=pdf.name,
     )
@@ -37,7 +38,6 @@ async def get_patient(patient_id: int) -> SPatientFull:
     # patient = await PatientDAO.find_one_or_none(Patient, id=patient_id)
     if patient is None:
         raise PatientNotFound
-    print(patient.medical_test)
     return SPatientFull.model_validate(patient)
 
 
@@ -49,3 +49,10 @@ async def get_all_patients() -> list[SPatient]:
 async def get_medical_tests(patient_id: int) -> Sequence[MedicalTest]:
     tests = await PatientDAO.find_all(MedicalTest, patient_id=patient_id)
     return tests
+
+
+async def get_pdf_file_path(medical_test_id: int) -> Path:
+    test = await PatientDAO.find_one_or_none(MedicalTest, id=medical_test_id)
+    if test is None:
+        raise ValueError
+    return Path(f"pdf_files/{test.file_name}")

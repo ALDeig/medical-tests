@@ -3,13 +3,18 @@ from pathlib import Path
 from typing import Annotated
 
 from fastapi import FastAPI, Form, HTTPException, Header, UploadFile, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from app.schemas.patient import SPatient, SPatientFull
 
 from app.settings import settings
-from app.src.services.patient.patient import get_all_patients, get_patient, save_analyse
+from app.src.services.patient.patient import (
+    get_all_patients,
+    get_patient,
+    get_pdf_file_path,
+    save_analyse,
+)
 
 
 app = FastAPI()
@@ -54,3 +59,9 @@ async def get_patients() -> list[SPatient]:
 async def get_patient_details(id: int) -> SPatientFull:
     patient = await get_patient(id)
     return patient
+
+
+@app.get("/api/medical-test/download/{id}")
+async def download_pdf(id: int) -> FileResponse:
+    file = await get_pdf_file_path(id)
+    return FileResponse(file)

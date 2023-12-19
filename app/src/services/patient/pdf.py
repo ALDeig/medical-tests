@@ -5,7 +5,6 @@ from typing import Protocol
 
 import pdfplumber
 from pdfplumber.page import Page
-from PyPDF2 import PdfReader
 
 from app.schemas.pdf import SResearchValue
 
@@ -22,6 +21,7 @@ class PatientData:
 class AnalysisData:
     patient_data: PatientData
     analyse_type: str
+    lab_name: str
     researches: dict[str, SResearchValue]
 
 
@@ -39,30 +39,57 @@ class InvitroPDF:
         self._pdf = pdf
 
     def recognize_pdf_file(self) -> AnalysisData:
-        patient_data = self._get_text_data()
+        patient_data = self._get_user_data()
         table_data, analyse_type = self._get_table_data()
+        lab_name, _ = self._get_laboratory_data()
         return AnalysisData(
-            patient_data=patient_data, analyse_type=analyse_type, researches=table_data
+            patient_data=patient_data,
+            analyse_type=analyse_type,
+            lab_name=lab_name,
+            researches=table_data,
         )
 
-    def _get_text_data(self) -> PatientData:
-        reader = PdfReader(self._pdf)
-        page = reader.pages[0]
-        text_lines = page.extract_text().split("\n")
-        full_name = self._get_value_from_text_line(
-            text_lines, "лабораторного тестирования"
-        )
-        gender = self._get_value_from_text_line(text_lines, "Пол:")
-        age = self._get_value_from_text_line(text_lines, "Возраст:")
-        analys_date = self._get_value_from_text_line(text_lines, "Дата взятия образца:")
-        analys_date = date(*map(int, analys_date.split(".")[::-1]))
-        return PatientData(full_name, gender, age, analys_date)
+    def _get_user_data(self) -> PatientData:
+        with pdfplumber.open(self._pdf) as pdf:
+            page = pdf.pages[0]
+            page_crop = page.crop((0, 0, page.width // 2, 240))
+            lines = page_crop.extract_text().split("\n")
+            analys_date = self._get_value_from_text_line(lines[4])
+            return PatientData(
+                full_name=lines[0],
+                gender=self._get_value_from_text_line(lines[1]),
+                age=self._get_value_from_text_line(lines[2]),
+                date=date(*map(int, analys_date.split(".")[::-1])),
+            )
+
+    # def _get_text_data(self) -> PatientData:
+    #     reader = PdfReader(self._pdf)
+    #     page = reader.pages[0]
+    #     text_lines = page.extract_text().split("\n")
+    #     full_name = self._get_value_from_text_line(
+    #         text_lines, "лабораторного тестирования"
+    #     )
+    #     gender = self._get_value_from_text_line(text_lines, "Пол:")
+    #     age = self._get_value_from_text_line(text_lines, "Возраст:")
+    #     analys_date = self._get_value_from_text_line(text_lines, "Дата взятия образца:")
+    #     analys_date = date(*map(int, analys_date.split(".")[::-1]))
+    #     return PatientData(full_name, gender, age, analys_date)
 
     @staticmethod
-    def _get_value_from_text_line(lines: list[str], value_type: str) -> str:
-        (value,) = (line for line in lines if line.startswith(value_type))
-        value = value.split(value_type)[-1].strip()
-        return value
+    def _get_value_from_text_line(line: str) -> str:
+        return line.split(":")[-1].strip()
+
+    # def _get_value_from_text_line(lines: list[str], value_type: str) -> str:
+    #     (value,) = (line for line in lines if line.startswith(value_type))
+    #     value = value.split(value_type)[-1].strip()
+    #     return value
+
+    def _get_laboratory_data(self) -> tuple[str, str]:
+        with pdfplumber.open(self._pdf) as pdf:
+            page = pdf.pages[0]
+            page_crop = page.crop((page.width // 2, 0, page.width, 200))
+            lines = page_crop.extract_text_lines(return_chars=False)
+            return lines[0]["text"], " ".join([line["text"] for line in lines[1:]])
 
     def _get_table_data(self) -> tuple[dict, str]:
         result = dict()
@@ -82,12 +109,12 @@ class InvitroPDF:
     ) -> tuple[dict[str, SResearchValue], str | None] | None:
         result = dict()
         table = page.find_table(
-            table_settings={"vertical_strategy": "text", "min_words_vertical": 8}
+            table_settings={"explicit_vertical_lines": [34, 159, 230, 297, 380, 575]}
         )
         if table is None:
             return
         lines = table.extract()
-        # Если первая страница, то в первой строке указан тпи анализа, 
+        # Если первая страница, то в первой строке указан тпи анализа,
         # поэтому ее пропускаем
         start_index = 1 if page_number == 0 else 0
         for line in lines[start_index:]:
