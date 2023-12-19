@@ -6,7 +6,7 @@ from fastapi import FastAPI, Form, HTTPException, Header, UploadFile, Request
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from app.schemas.patient import SPatient, SPatientFull
+from app.schemas.patient import SAnalyseResponse, SPatient, SPatientFull
 
 from app.settings import settings
 from app.src.services.patient.patient import (
@@ -38,7 +38,7 @@ async def upload_pdf(
     file: UploadFile,
     telegram_id: Annotated[int, Form()],
     api_key: Annotated[str | None, Header()],
-):
+) -> SAnalyseResponse:
     check_api_key(api_key)
     file_location = Path(
         f"pdf_files/{telegram_id}-{int(datetime.now().timestamp())}.pdf"
@@ -46,8 +46,8 @@ async def upload_pdf(
     with open(file_location, "wb") as f:
         while content := await file.read(1024):
             f.write(content)
-    await save_analyse(file_location, telegram_id)
-    return {"success": True}
+    result = await save_analyse(file_location, telegram_id)
+    return result
 
 
 @app.get("/api/patients/")

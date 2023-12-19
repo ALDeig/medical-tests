@@ -5,6 +5,10 @@ from pydantic import BaseModel, ConfigDict
 from app.schemas.pdf import SResearchValue
 
 
+class SAnalyseResponse(BaseModel):
+    success: bool
+    message: str
+
 class SMedicalTest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
