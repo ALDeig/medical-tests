@@ -2,8 +2,12 @@ function fetchPatients() {
   fetch("/api/patients/")
     .then((response) => response.json())
     .then((data) => {
-      const patientsList = document.getElementById("patients-list");
-      patientsList.innerHTML = ""; // Очистить текущий список
+      document.body.innerHTML = "";
+      const h1 = document.createElement("h1")
+      h1.textContent = "Пациенты:"
+      document.body.appendChild(h1)
+      const patientsList = document.createElement("patients-list");
+      // patientsList.innerHTML = ""; // Очистить текущий список
       data.forEach((patient) => {
         const listItem = document.createElement("li");
         listItem.textContent = `${patient.full_name}`;
@@ -12,6 +16,7 @@ function fetchPatients() {
         listItem.addEventListener("click", fetchPatientDetails);
         patientsList.appendChild(listItem);
       });
+      document.body.appendChild(patientsList);
     })
     .catch((error) => {
       console.error("Ошибка при получении списка пациентов:", error);
@@ -22,18 +27,18 @@ fetchPatients();
 
 function fetchPatientDetails(event) {
   const patient_id = event.srcElement.attributes["id"];
-  console.log(patient_id.value);
   fetch(`/api/patient/${patient_id.value}`)
     .then((response) => response.json())
     .then((patient) => {
       document.title = patient.full_name;
       document.body.innerHTML = "";
+      const button = createBackButton();
+      button.addEventListener("click", fetchPatients);
       const h1 = document.createElement("h1");
       h1.textContent = `${patient.full_name}`;
       const gender = document.createElement("div");
       gender.textContent = `Пол: ${patient.gender}`;
       const testsLists = document.createElement("ul");
-      console.log(patient.medical_test);
       patient.medical_test.forEach((test) => {
         const listItem = document.createElement("li");
         listItem.textContent = `${test.test_date} - ${test.test_name}`;
@@ -43,6 +48,7 @@ function fetchPatientDetails(event) {
         testsLists.appendChild(listItem);
       });
       document.body.appendChild(h1);
+      document.body.appendChild(button);
       document.body.appendChild(gender);
       document.body.appendChild(testsLists);
     })
@@ -76,6 +82,9 @@ function showMedicalTestDetail(patient, test) {
   patientInfo.appendChild(labName);
   const buttonDownload = createDownloadButton(test.id);
   patientInfo.appendChild(buttonDownload);
+  const buttonBack = createBackButton(patient.id);
+  buttonBack.addEventListener("click", fetchPatientDetails);
+  patientInfo.appendChild(buttonBack);
   const table = document.createElement("table");
   const tableTitle = document.createElement("thead");
   const titleRow = document.createElement("tr");
@@ -128,4 +137,13 @@ function createDownloadButton(id) {
   button.textContent = "Скачать PDF";
   link.appendChild(button);
   return link;
+}
+
+function createBackButton(id) {
+  const button = document.createElement("button");
+  button.textContent = "Вернуться назад";
+  button.setAttribute("type", "button");
+  button.id = id;
+  button.className = "back";
+  return button;
 }

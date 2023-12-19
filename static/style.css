@@ -17,6 +17,10 @@ li:hover {
   margin-bottom: 20px;
 }
 
+button {
+  margin: 5px 5px 5px 0;
+}
+
 table {
     width: 800px; /*Ширина таблицы*/
     margin-bottom: 18px; /*Отступ снизу от таблицы*/
