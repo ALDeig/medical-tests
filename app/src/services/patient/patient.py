@@ -5,12 +5,11 @@ from app.schemas.patient import SAnalyseResponse, SPatient, SPatientFull
 from app.src.models.models import MedicalTest, Patient
 from app.src.services.patient.dao import PatientDAO
 from app.src.services.patient.exceptions import PatientNotFound
-from app.src.services.patient.pdf import InvitroPDF
+from app.src.services.patient.pdf import AnalysisData, InvitroPDF
 
 
 async def save_analyse(pdf: Path, telegram_id: int) -> SAnalyseResponse:
     analyse_data = InvitroPDF(pdf).recognize_pdf_file()
-    # patient = await PatientDAO.find_one_or_none(Patient, tg_id=telegram_id)
     patient = await PatientDAO.get_patient_with_tests(Patient, tg_id=telegram_id)
     if patient is None:
         patient = await PatientDAO.add(
@@ -19,12 +18,13 @@ async def save_analyse(pdf: Path, telegram_id: int) -> SAnalyseResponse:
             full_name=analyse_data.patient_data.full_name,
             gender=analyse_data.patient_data.gender,
         )
-        tests = [] 
+        tests = []
     else:
         tests = patient.medical_test
-    for test in tests:
-        if analyse_data.patient_data.date == test.test_date:
-            return SAnalyseResponse(success=False, message=f"{test.test_date:%d-%m-%Y}")
+    if _is_medical_test_exist(tests, analyse_data):
+        return SAnalyseResponse(
+            success=False, message=f"{analyse_data.patient_data.date:%d-%m-%Y}"
+        )
     await PatientDAO.add(
         MedicalTest,
         patient_id=patient.id,
@@ -37,13 +37,20 @@ async def save_analyse(pdf: Path, telegram_id: int) -> SAnalyseResponse:
         test_name=analyse_data.analyse_type,
         file_name=pdf.name,
     )
-    return SAnalyseResponse(success=True, message="")
+    return SAnalyseResponse(success=True, message="Данные успешно сохранены")
+
+
+def _is_medical_test_exist(
+    exist_tests: list[MedicalTest], new_test: AnalysisData
+) -> bool:
+    for test in exist_tests:
+        if new_test.patient_data.date == test.test_date:
+            return True
+    return False
 
 
 async def get_patient(patient_id: int) -> SPatientFull:
     patient = await PatientDAO.get_patient_with_tests(Patient, id=patient_id)
-    # patient = await PatientDAO.get_patient_with_tests(Patient, id=patient_id)
-    # patient = await PatientDAO.find_one_or_none(Patient, id=patient_id)
     if patient is None:
         raise PatientNotFound
     return SPatientFull.model_validate(patient)

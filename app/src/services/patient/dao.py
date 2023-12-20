@@ -20,8 +20,3 @@ class PatientDAO(BaseDAO):
         async with session_factory() as session:
             response = await session.scalar(query)
             return response
-            # if response is not None:
-            #     print(response.medical_test)
-            #     return SPatient.model_validate(response)
-            # print(response.medical_test)
-            # return response

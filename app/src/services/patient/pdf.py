@@ -62,27 +62,9 @@ class InvitroPDF:
                 date=date(*map(int, analys_date.split(".")[::-1])),
             )
 
-    # def _get_text_data(self) -> PatientData:
-    #     reader = PdfReader(self._pdf)
-    #     page = reader.pages[0]
-    #     text_lines = page.extract_text().split("\n")
-    #     full_name = self._get_value_from_text_line(
-    #         text_lines, "лабораторного тестирования"
-    #     )
-    #     gender = self._get_value_from_text_line(text_lines, "Пол:")
-    #     age = self._get_value_from_text_line(text_lines, "Возраст:")
-    #     analys_date = self._get_value_from_text_line(text_lines, "Дата взятия образца:")
-    #     analys_date = date(*map(int, analys_date.split(".")[::-1]))
-    #     return PatientData(full_name, gender, age, analys_date)
-
     @staticmethod
     def _get_value_from_text_line(line: str) -> str:
         return line.split(":")[-1].strip()
-
-    # def _get_value_from_text_line(lines: list[str], value_type: str) -> str:
-    #     (value,) = (line for line in lines if line.startswith(value_type))
-    #     value = value.split(value_type)[-1].strip()
-    #     return value
 
     def _get_laboratory_data(self) -> tuple[str, str]:
         with pdfplumber.open(self._pdf) as pdf:

@@ -3,11 +3,10 @@ function fetchPatients() {
     .then((response) => response.json())
     .then((data) => {
       document.body.innerHTML = "";
-      const h1 = document.createElement("h1")
-      h1.textContent = "Пациенты:"
-      document.body.appendChild(h1)
+      const h1 = document.createElement("h1");
+      h1.textContent = "Пациенты:";
+      document.body.appendChild(h1);
       const patientsList = document.createElement("patients-list");
-      // patientsList.innerHTML = ""; // Очистить текущий список
       data.forEach((patient) => {
         const listItem = document.createElement("li");
         listItem.textContent = `${patient.full_name}`;
@@ -63,6 +62,13 @@ function showMedicalTestDetail(patient, test) {
   const h1 = document.createElement("h1");
   h1.textContent = `${test.test_date} - ${test.test_name}`;
   document.body.appendChild(h1);
+  const patientInfo = createPatientInfo(patient, test);
+  const table = createTableMedicalTestDetails(test);
+  document.body.appendChild(patientInfo);
+  document.body.appendChild(table);
+}
+
+function createPatientInfo(patient, test) {
   const patientInfo = document.createElement("div");
   patientInfo.className = "patient-info";
   const name = document.createElement("div");
@@ -85,6 +91,10 @@ function showMedicalTestDetail(patient, test) {
   const buttonBack = createBackButton(patient.id);
   buttonBack.addEventListener("click", fetchPatientDetails);
   patientInfo.appendChild(buttonBack);
+  return patientInfo;
+}
+
+function createTableMedicalTestDetails(test) {
   const table = document.createElement("table");
   const tableTitle = document.createElement("thead");
   const titleRow = document.createElement("tr");
@@ -126,8 +136,7 @@ function showMedicalTestDetail(patient, test) {
     tbody.appendChild(tRow);
   }
   table.appendChild(tbody);
-  document.body.appendChild(patientInfo);
-  document.body.appendChild(table);
+  return table;
 }
 
 function createDownloadButton(id) {
