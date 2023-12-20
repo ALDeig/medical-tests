@@ -8,7 +8,7 @@
 
 ```bash
 poetry shell
-poetry install
+poetry install --no-root
 alembic upgrade head
 ```
 
