@@ -1,6 +1,6 @@
 from typing import Any
 
-from pydantic import model_validator, MySQLDsn
+from pydantic import PostgresDsn, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -8,21 +8,21 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf8")
 
     secret_key: str
-    db_user: str
-    db_password: str
-    db_name: str
-    db_host: str
-    mysql_dsn: MySQLDsn
+    postgres_user: str
+    postgres_password: str
+    postgres_db: str
+    postgres_host: str
+    postgres_dsn: PostgresDsn
 
     @model_validator(mode="before")
     @classmethod
-    def create_mysql_dsn(cls, data: Any):
-        user = data["db_user"]
-        password = data["db_password"]
-        name = data["db_name"]
-        host = data["db_host"]
-        data["mysql_dsn"] = MySQLDsn(
-            f"mysql+asyncmy://{user}:{password}@{host}:5432/{name}?charset=utf8mb4"
+    def create_postgres_dsn(cls, data: Any):
+        user = data["postgres_user"]
+        password = data["postgres_password"]
+        name = data["postgres_db"]
+        host = data["postgres_host"]
+        data["postgres_dsn"] = PostgresDsn(
+            f"postgresql+asyncpg://{user}:{password}@{host}:5432/{name}"
         )
         return data
 
